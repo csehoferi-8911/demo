@@ -1,0 +1,27 @@
+spring:
+  data:
+    redis:
+      port: 6379
+      host: localhost
+  datasource:
+    url: jdbc:mysql://localhost:3306/moviedb
+    username: user
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MySQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+omdb:
+  apikey: 8777f47c
+  api-name: omdb
+
+themoviedb:
+  apikey: 0f9dabf2ae5b87ffd0bc28efc66d4b3c
+  api-name: moviedb
