@@ -3,7 +3,6 @@ package hu.informula.demo.service;
 import hu.informula.demo.data.MovieResponseSearch;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,7 +18,6 @@ public class MovieService {
     private final TheMovideDbApiService theMovideDbApiService;
     private final RedisService redisService;
 
-    @Cacheable(value = "moviesCache", key = "#movieTitle.toLowerCase()")
     public MovieResponseSearch getMovies(final String movieTitle, final String api) {
         final var cachedMovies = redisService.searchInCache(movieTitle, api);
 
