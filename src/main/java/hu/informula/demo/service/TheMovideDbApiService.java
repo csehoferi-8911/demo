@@ -19,7 +19,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class TheMovideDbApiService {
+public class TheMovideDbApiService implements MovieApiService {
 
     @Value("${themoviedb.apikey}")
     private String apiKey;
@@ -29,6 +29,7 @@ public class TheMovideDbApiService {
     private final MovieRepository movieRepository;
     private final RedisService redisService;
 
+    @Override
     @Transactional
     public MovieResponseSearch getMovieDetails(final String movieTitle, final String api) {
         final var searchUrl = String.format("https://api.themoviedb.org/3/search/movie?api_key=%s&query=%s&include_adult=true", apiKey, movieTitle);

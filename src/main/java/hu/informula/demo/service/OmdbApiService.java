@@ -19,7 +19,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class OmdbApiService {
+public class OmdbApiService implements MovieApiService {
 
     @Value("${omdb.apikey}")
     private String apiKey;
@@ -29,6 +29,7 @@ public class OmdbApiService {
     private final MovieRepository movieRepository;
     private final RedisService redisService;
 
+    @Override
     @Transactional
     public MovieResponseSearch getMovieDetails(final String movieTitle, final String api) {
         final var searchUrl = String.format("http://www.omdbapi.com/?s=%s&apikey=%s", movieTitle, apiKey);
