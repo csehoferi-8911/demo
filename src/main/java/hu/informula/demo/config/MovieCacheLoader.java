@@ -6,12 +6,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import static hu.informula.demo.data.MovieStatic.CACHE_KEY_PREFIX;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -24,29 +27,46 @@ public class MovieCacheLoader implements CommandLineRunner {
     private String themoviedbApiName;
 
     private final MovieRepository movieRepository;
-    private final RedisTemplate<String, MovieResponse> redisTemplate;
+    private final CacheManager cacheManager;
+
+    private final Set<String> cacheKeys = new HashSet<>();
 
     @Override
     public void run(String... args) {
-        if (!containsKey(CACHE_KEY_PREFIX + omdbApiName.concat(":")) && !containsKey(CACHE_KEY_PREFIX + themoviedbApiName.concat(":"))) {
-            log.info("Redis cache is empty, load datas from database...");
+        Cache cache = cacheManager.getCache("moviesCache");
+
+        if (containsCacheKey(omdbApiName) && containsCacheKey(themoviedbApiName)) {
+            log.info("Redis cache is empty, loading data from database...");
 
             final var moviesFromDb = movieRepository.findAll();
 
-            moviesFromDb.forEach(m -> {
-                final var directors = m.getDirectors().stream().toList();
-                final var movieResp = MovieResponse.builder().title(m.getTitle()).year(m.getYear()).directors(directors).build();
-                redisTemplate.opsForValue().set(CACHE_KEY_PREFIX + m.getApi() + ":" + movieResp.title().toLowerCase(), movieResp);
+            Map<String, List<MovieResponse>> groupedMovies = moviesFromDb.stream()
+                    .collect(Collectors.groupingBy(
+                            m -> m.getSearch().toLowerCase().concat("-").concat(m.getApi()),
+                            Collectors.mapping(m -> {
+                                final var directors = m.getDirectors().stream().toList();
+                                return MovieResponse.builder()
+                                        .title(m.getTitle())
+                                        .year(m.getYear())
+                                        .directors(directors)
+                                        .build();
+                            }, Collectors.toList())
+                    ));
+
+            groupedMovies.forEach((cacheKey, movieResponses) -> {
+                if (cache != null) {
+                    cache.put(cacheKey, movieResponses);
+                    cacheKeys.add(cacheKey);
+                }
             });
+
             log.info("Redis cache is uploaded");
         } else {
             log.info("Redis cache already uploaded");
         }
     }
 
-    public boolean containsKey(String partOfTheKey) {
-        Set<String> keys = redisTemplate.keys(CACHE_KEY_PREFIX + "*");
-        return keys.stream().anyMatch(key -> key.contains(partOfTheKey));
+    public boolean containsCacheKey(String apiName) {
+        return cacheKeys.stream().noneMatch(key -> key.contains(apiName));
     }
 }
-

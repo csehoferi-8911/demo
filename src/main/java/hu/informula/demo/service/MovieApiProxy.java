@@ -1,9 +1,11 @@
 package hu.informula.demo.service;
 
-import hu.informula.demo.data.MovieResponseSearch;
+import hu.informula.demo.data.MovieResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +20,7 @@ public class MovieApiProxy implements MovieApiService {
     private final TheMovideDbApiService theMovideDbApiService;
 
     @Override
-    public MovieResponseSearch getMovieDetails(String movieTitle, String api) {
+    public List<MovieResponse> getMovieDetails(String movieTitle, String api) {
         if (omdbApiName.equalsIgnoreCase(api)) {
             return omdbApiService.getMovieDetails(movieTitle, api);
         } else if (themoviedbApiName.equalsIgnoreCase(api)) {

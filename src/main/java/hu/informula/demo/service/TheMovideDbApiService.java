@@ -1,7 +1,6 @@
 package hu.informula.demo.service;
 
 import hu.informula.demo.data.MovieResponse;
-import hu.informula.demo.data.MovieResponseSearch;
 import hu.informula.demo.data.themoviedb.TheMovieDbCast;
 import hu.informula.demo.data.themoviedb.TheMovieDbSearchById;
 import hu.informula.demo.data.themoviedb.TheMovieDbSearchCast;
@@ -10,6 +9,7 @@ import hu.informula.demo.model.MovieRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -27,11 +27,11 @@ public class TheMovideDbApiService implements MovieApiService {
     private final RestTemplate restTemplate;
     private final MovieMapper movieMapper;
     private final MovieRepository movieRepository;
-    private final RedisService redisService;
 
     @Override
     @Transactional
-    public MovieResponseSearch getMovieDetails(final String movieTitle, final String api) {
+    @CachePut(value = "moviesCache", key = "#movieTitle.concat('-').concat(#api)")
+    public List<MovieResponse> getMovieDetails(final String movieTitle, final String api) {
         final var searchUrl = String.format("https://api.themoviedb.org/3/search/movie?api_key=%s&query=%s&include_adult=true", apiKey, movieTitle);
         final var theMovieDbSearchById = restTemplate.getForEntity(searchUrl, TheMovieDbSearchById.class).getBody();
 
@@ -50,12 +50,11 @@ public class TheMovideDbApiService implements MovieApiService {
                             .map(date -> date.substring(0, 4))
                             .orElse("N/A");
                     final var movie = movieMapper.moviedbToMovie(theMovieDbSearch, directors, releaseYear);
-                    movieRepository.save(movieMapper.responseToEntity(movie, api));
-                    redisService.saveToCache(movie, api);
+                    movieRepository.save(movieMapper.responseToEntity(movie, api, movieTitle));
                     movieList.add(movie);
                 }));
 
-        return MovieResponseSearch.builder().movieResponses(movieList).build();
+        return movieList;
     }
 
 }

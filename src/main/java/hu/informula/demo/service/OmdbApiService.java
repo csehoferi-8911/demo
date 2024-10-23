@@ -1,7 +1,6 @@
 package hu.informula.demo.service;
 
 import hu.informula.demo.data.MovieResponse;
-import hu.informula.demo.data.MovieResponseSearch;
 import hu.informula.demo.data.omdb.OmdbMovieResponse;
 import hu.informula.demo.data.omdb.OmdbSearchResponse;
 import hu.informula.demo.mapper.MovieMapper;
@@ -9,6 +8,7 @@ import hu.informula.demo.model.MovieRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -27,11 +27,11 @@ public class OmdbApiService implements MovieApiService {
     private final RestTemplate restTemplate;
     private final MovieMapper movieMapper;
     private final MovieRepository movieRepository;
-    private final RedisService redisService;
 
     @Override
     @Transactional
-    public MovieResponseSearch getMovieDetails(final String movieTitle, final String api) {
+    @CachePut(value = "moviesCache", key = "#movieTitle.concat('-').concat(#api)")
+    public List<MovieResponse> getMovieDetails(final String movieTitle, final String api) {
         final var searchUrl = String.format("http://www.omdbapi.com/?s=%s&apikey=%s", movieTitle, apiKey);
         final var omdbSearchResponse = restTemplate.getForEntity(searchUrl, OmdbSearchResponse.class).getBody();
 
@@ -47,13 +47,12 @@ public class OmdbApiService implements MovieApiService {
                                 .map(d -> List.of(d.split(",\\s*")))
                                 .orElse(Collections.emptyList());
                         final var movie = movieMapper.omdbToMovie(omdbMovieResponse, directors);
-                        movieRepository.save(movieMapper.responseToEntity(movie, api));
-                        redisService.saveToCache(movie, api);
+                        movieRepository.save(movieMapper.responseToEntity(movie, api, movieTitle));
                         movieList.add(movie);
                     }
                 }));
 
-        return MovieResponseSearch.builder().movieResponses(movieList).build();
+        return movieList;
     }
 
 }

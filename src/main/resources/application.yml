@@ -13,10 +13,9 @@ spring:
       ddl-auto: update
     properties:
       hibernate.dialect: org.hibernate.dialect.MySQLDialect
-  flyway:
+  liquibase:
+    change-log: classpath:db/changelog/changelog-master.yaml
     enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
 
 omdb:
   apikey: 8777f47c

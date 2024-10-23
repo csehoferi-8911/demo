@@ -24,6 +24,8 @@ public class Movie implements Serializable {
     private String year;
     @Column(nullable = false)
     private String api;
+    @Column(nullable = false)
+    private String search;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "movie_directors", joinColumns = @JoinColumn(name = "movie_id"))

@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: yourname
+      changes:
+        - createTable:
+            tableName: movies
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: year
+                  type: VARCHAR(4)
+              - column:
+                  name: search
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: api
+                  type: VARCHAR(10)
+
+  - changeSet:
+      id: 2
+      author: yourname
+      changes:
+        - createTable:
+            tableName: movie_directors
+            columns:
+              - column:
+                  name: movie_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: director
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: movie_directors
+            baseColumnNames: movie_id
+            constraintName: fk_movie_directors_movies
+            referencedTableName: movies
+            referencedColumnNames: id
+            onDelete: CASCADE

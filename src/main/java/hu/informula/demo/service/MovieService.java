@@ -1,23 +1,20 @@
 package hu.informula.demo.service;
 
-import hu.informula.demo.data.MovieResponseSearch;
+import hu.informula.demo.data.MovieResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class MovieService {
 
     private final MovieApiProxy movieApiProxy;
-    private final RedisService redisService;
 
-    public MovieResponseSearch getMovies(final String movieTitle, final String api) {
-        final var cachedMovies = redisService.searchInCache(movieTitle, api);
-
-        if (!cachedMovies.isEmpty()) {
-            return MovieResponseSearch.builder().movieResponses(cachedMovies).build();
-        }
-
+    @Cacheable(value = "moviesCache", key = "#movieTitle.concat('-').concat(#api)", unless = "#result == null || #result.isEmpty()")
+    public List<MovieResponse> getMovies(final String movieTitle, final String api) {
         return movieApiProxy.getMovieDetails(movieTitle, api);
     }
 }

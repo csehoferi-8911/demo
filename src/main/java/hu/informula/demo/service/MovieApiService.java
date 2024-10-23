@@ -1,7 +1,9 @@
 package hu.informula.demo.service;
 
-import hu.informula.demo.data.MovieResponseSearch;
+import hu.informula.demo.data.MovieResponse;
+
+import java.util.List;
 
 public interface MovieApiService {
-    MovieResponseSearch getMovieDetails(String movieTitle, String api);
+    List<MovieResponse> getMovieDetails(String movieTitle, String api);
 }
