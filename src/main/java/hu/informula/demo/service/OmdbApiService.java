@@ -8,7 +8,6 @@ import hu.informula.demo.model.MovieRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,7 +29,6 @@ public class OmdbApiService implements MovieApiService {
 
     @Override
     @Transactional
-    @CachePut(value = "moviesCache", key = "#movieTitle.concat('-').concat(#api)")
     public List<MovieResponse> getMovieDetails(final String movieTitle, final String api) {
         final var searchUrl = String.format("http://www.omdbapi.com/?s=%s&apikey=%s", movieTitle, apiKey);
         final var omdbSearchResponse = restTemplate.getForEntity(searchUrl, OmdbSearchResponse.class).getBody();
