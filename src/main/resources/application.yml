@@ -16,6 +16,10 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/changelog-master.yaml
     enabled: true
+  docker:
+    compose:
+      enabled: true
+      file: docker-compose.yml
 
 omdb:
   apikey: 8777f47c
